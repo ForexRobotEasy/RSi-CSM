@@ -1,0 +1,75 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                            RSi CSM Forex Trading Software Code                                       |
+//|                                Developed by Forex Robot Easy Team                                        |
+//|                                           Developer's Site: forexroboteasy.com                                          |
+//+------------------------------------------------------------------+
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <Expert\Expert.mqh>
+#include <Indicators\Indicators.mqh>
+
+// Define global variables
+CTrade trade;
+CExpert expert;
+CIndicators indicators;
+
+// Initialize the expert advisor
+int OnInit()
+{
+   // Set up trade parameters
+   trade.SetExpertMagicNumber(123456);
+   trade.SetExpertName('RSi CSM');
+
+   // Add indicators for market analysis
+   indicators.AddIndicator(IND_RSI, PERIOD_M15, 14);
+   indicators.AddIndicator(IND_MACD, PERIOD_M15, 12, 26, 9);
+
+   return(INIT_SUCCEEDED);
+}
+
+// Perform market analysis and make trading decisions
+void OnTick()
+{
+   // Get RSI value
+   double rsi = indicators.GetIndicatorValue(IND_RSI, 0);
+
+   // Get MACD values
+   double macdLine = indicators.GetIndicatorValue(IND_MACD, 0);
+   double signalLine = indicators.GetIndicatorValue(IND_MACD, 1);
+
+   // Check for buy/sell signals based on market analysis
+   if (rsi > 70 && macdLine > signalLine)
+   {
+      // Open a buy trade
+      trade.Buy(0.1, Symbol(), Ask, 10, 0, 0, 'RSi CSM Buy');
+   }
+   else if (rsi < 30 && macdLine < signalLine)
+   {
+      // Open a sell trade
+      trade.Sell(0.1, Symbol(), Bid, 10, 0, 0, 'RSi CSM Sell');
+   }
+}
+
+// Handle trade events
+void OnTrade()
+{
+   // Check for trade closure
+   if (trade.IsTradeOpen())
+   {
+      // Close trades when profit reaches 100 pips
+      if (trade.GetProfit() >= 100)
+      {
+         trade.CloseAll();
+      }
+   }
+}
+
+// Handle deinitialization
+void OnDeinit(const int reason)
+{
+   // Clean up and exit
+   trade.CloseAll();
+}
+
